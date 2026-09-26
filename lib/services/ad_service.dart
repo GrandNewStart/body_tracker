@@ -2,8 +2,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-/// Manages Google Mobile Ads (AdMob) initialization, preloading,
-/// and displaying Rewarded Ads for video rendering.
+/// Manages Google Mobile Ads (AdMob) initialization, Google UMP user consent,
+/// preloading, and displaying Rewarded Ads for video rendering.
 class AdService {
   static final AdService instance = AdService._internal();
   AdService._internal();
@@ -13,24 +13,47 @@ class AdService {
   int _retryAttempt = 0;
   static const int _maxRetries = 3;
 
-  /// Official Google AdMob Sample Rewarded Ad Unit IDs for testing.
-  static const String _androidDefaultRewardedAdUnitId =
+  /// Official Google AdMob Sample Rewarded Ad Unit ID for Android testing.
+  static const String _androidTestRewardedAdUnitId =
       'ca-app-pub-3940256099942544/5224354917';
-  static const String _iosDefaultRewardedAdUnitId =
+
+  /// Production Android Rewarded Ad Unit ID.
+  /// Can be injected via secret: --dart-define=ADMOB_ANDROID_REWARDED_AD_UNIT_ID=...
+  static const String _androidProductionRewardedAdUnitId =
+      String.fromEnvironment(
+    'ADMOB_ANDROID_REWARDED_AD_UNIT_ID',
+    defaultValue: 'ca-app-pub-1505069800787234/9551660101',
+  );
+
+  /// Production iOS Rewarded Ad Unit ID.
+  /// Can be injected via secret: --dart-define=ADMOB_IOS_REWARDED_AD_UNIT_ID=...
+  static const String _iosProductionRewardedAdUnitId =
+      String.fromEnvironment(
+    'ADMOB_IOS_REWARDED_AD_UNIT_ID',
+    defaultValue: 'ca-app-pub-1505069800787234/6070656652',
+  );
+
+  /// Official Google AdMob Sample Rewarded Ad Unit ID for iOS testing.
+  static const String _iosTestRewardedAdUnitId =
       'ca-app-pub-3940256099942544/1712485313';
 
   /// Returns the configured Rewarded Ad Unit ID.
-  /// Falls back to official Google test IDs if no environment override is provided.
+  /// Uses official Google test IDs in debug mode to prevent unapproved account errors,
+  /// and automatically switches to your live production ID in release mode.
   String get rewardedAdUnitId {
     const envAdId = String.fromEnvironment('ADMOB_REWARDED_ID', defaultValue: '');
     if (envAdId.isNotEmpty) {
       return envAdId;
     }
     if (!kIsWeb && Platform.isAndroid) {
-      return _androidDefaultRewardedAdUnitId;
+      return kReleaseMode
+          ? _androidProductionRewardedAdUnitId
+          : _androidTestRewardedAdUnitId;
     }
     if (!kIsWeb && Platform.isIOS) {
-      return _iosDefaultRewardedAdUnitId;
+      return kReleaseMode
+          ? _iosProductionRewardedAdUnitId
+          : _iosTestRewardedAdUnitId;
     }
     return '';
   }
@@ -42,7 +65,8 @@ class AdService {
   bool get isSupportedPlatform =>
       !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
-  /// Initializes the Google Mobile Ads SDK and pre-loads the first rewarded ad.
+  /// Initializes Google Mobile Ads and gathers User Consent via the Google
+  /// User Messaging Platform (UMP) SDK (required for GDPR/EEA/UK/ATT compliance).
   Future<void> init() async {
     if (!isSupportedPlatform) {
       debugPrint('[AdService] Platform is not Android/iOS. Ads disabled.');
@@ -50,11 +74,91 @@ class AdService {
     }
 
     try {
-      await MobileAds.instance.initialize();
-      debugPrint('[AdService] MobileAds initialized successfully.');
-      loadRewardedAd();
+      final params = ConsentRequestParameters();
+
+      // Request updated consent info from Google UMP
+      ConsentInformation.instance.requestConsentInfoUpdate(
+        params,
+        () async {
+          // If consent is required (e.g. users in the EU/EEA/UK), present the certified form
+          ConsentForm.loadAndShowConsentFormIfRequired((FormError? formError) async {
+            if (formError != null) {
+              debugPrint('[AdService] UMP Consent Form error: ${formError.errorCode}: ${formError.message}');
+            }
+            await _initializeMobileAdsIfPermitted();
+          });
+        },
+        (FormError error) async {
+          debugPrint('[AdService] UMP ConsentInfoUpdate error: ${error.errorCode}: ${error.message}');
+          // In case of network errors, attempt initializing if cached consent allows it
+          await _initializeMobileAdsIfPermitted();
+        },
+      );
+    } catch (e) {
+      debugPrint('[AdService] Error during consent update: $e');
+      await _initializeMobileAdsIfPermitted();
+    }
+  }
+
+  /// Checks consent status and initializes MobileAds SDK if permitted by the user.
+  Future<void> _initializeMobileAdsIfPermitted() async {
+    if (!isSupportedPlatform) return;
+
+    try {
+      final canRequest = await ConsentInformation.instance.canRequestAds();
+      debugPrint('[AdService] Can request ads according to consent: $canRequest');
+
+      if (canRequest) {
+        await MobileAds.instance.initialize();
+        debugPrint('[AdService] MobileAds initialized successfully.');
+        loadRewardedAd();
+      }
     } catch (e) {
       debugPrint('[AdService] Error initializing MobileAds: $e');
+    }
+  }
+
+  /// Checks whether the user is in a jurisdiction where privacy options should be exposed (e.g. GDPR).
+  Future<bool> isPrivacyOptionsRequired() async {
+    if (!isSupportedPlatform) return false;
+    try {
+      final status =
+          await ConsentInformation.instance.getPrivacyOptionsRequirementStatus();
+      return status == PrivacyOptionsRequirementStatus.required;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Displays the UMP Privacy Options Form so users can review or revoke ad consent at any time.
+  /// If the user is outside the EEA/UK where consent is not legally required, [onNotRequired] is invoked.
+  Future<void> showPrivacyOptionsForm({
+    VoidCallback? onNotRequired,
+    void Function(String message)? onError,
+  }) async {
+    if (!isSupportedPlatform) {
+      onNotRequired?.call();
+      return;
+    }
+
+    try {
+      final status =
+          await ConsentInformation.instance.getPrivacyOptionsRequirementStatus();
+      if (status != PrivacyOptionsRequirementStatus.required) {
+        debugPrint('[AdService] Privacy options form is not required for this region ($status).');
+        onNotRequired?.call();
+        return;
+      }
+
+      ConsentForm.showPrivacyOptionsForm((FormError? error) {
+        if (error != null) {
+          debugPrint('[AdService] Privacy options form error: ${error.message}');
+          onError?.call(error.message);
+        }
+      });
+    } catch (e) {
+      debugPrint('[AdService] Privacy options error: $e');
+      onError?.call(e.toString());
     }
   }
 

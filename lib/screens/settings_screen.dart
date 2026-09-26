@@ -1,8 +1,8 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_strings.dart';
 import '../models/app_config.dart';
+import '../services/ad_service.dart';
 import '../services/auth_service.dart';
 import '../services/config_service.dart';
 import '../services/notification_service.dart';
@@ -117,6 +117,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  /*
   Future<void> _showRawJsonEditor(BuildContext context) async {
     final strings = AppStrings(ConfigService.instance.config.language);
     final rawJson = await ConfigService.instance.readRawConfigJson();
@@ -185,6 +186,73 @@ class _SettingsScreenState extends State<SettingsScreen> {
           },
         );
       },
+    );
+  }
+  */
+
+  static const String _privacyPolicyUrl =
+      'https://bluelemonade.co.kr/body-tracker/privacy-policy.html';
+
+  Future<void> _openPrivacyPolicy(BuildContext context, AppStrings strings) async {
+    final uri = Uri.parse(_privacyPolicyUrl);
+    try {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && context.mounted) {
+        _showPrivacyPolicyDialog(context, strings);
+      }
+    } catch (_) {
+      if (context.mounted) {
+        _showPrivacyPolicyDialog(context, strings);
+      }
+    }
+  }
+
+  void _showPrivacyPolicyDialog(BuildContext context, AppStrings strings) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.shield_outlined, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 8),
+            Text(strings.privacyPolicyTitle),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                strings.isKorean
+                    ? '1. 100% 로컬 데이터 저장\n사진, 신체 측정값, PIN 및 설정은 외부 서버로 전송되지 않으며 사용자 기기 내에만 안전하게 보관됩니다.\n\n'
+                      '2. 기기 내 온디바이스 AI\nGoogle ML Kit 포즈 및 얼굴 감지 기술은 기기 내부(CPU/NPU)에서만 실시간 연산됩니다.\n\n'
+                      '3. 리워드 광고 (Google AdMob)\n비디오 생성 시 Google AdMob을 통해 리워드 광고가 제공됩니다. 광고 전달 및 사기 방지를 위해 익명 기기 식별자가 처리될 수 있습니다.\n\n'
+                      '공식 웹페이지에서 전체 방침을 확인하세요:\n$_privacyPolicyUrl'
+                    : '1. 100% On-Device Storage\nYour photos, body measurements, PIN, and preferences are never transmitted to external servers.\n\n'
+                      '2. Local AI Processing\nGoogle ML Kit pose and face detection execute strictly offline on your phone.\n\n'
+                      '3. Rewarded Ads (Google AdMob)\nRewarded video ads are served via Google AdMob prior to video rendering. Anonymous device identifiers may be processed for ad delivery and fraud prevention.\n\n'
+                      'View full policy on our website:\n$_privacyPolicyUrl',
+                style: const TextStyle(fontSize: 13, height: 1.5),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(strings.ok),
+          ),
+          FilledButton.icon(
+            icon: const Icon(Icons.open_in_browser, size: 16),
+            label: Text(strings.isKorean ? '웹에서 열기' : 'Open in Browser'),
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              launchUrl(Uri.parse(_privacyPolicyUrl), mode: LaunchMode.externalApplication);
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -403,7 +471,70 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 16),
 
-          // 5. config.json Visualizer & Raw Editor
+          // 5. Privacy & Legal Section
+          Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    strings.privacySection,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.shield_outlined),
+                    title: Text(strings.privacyPolicyTitle),
+                    subtitle: Text(strings.privacyPolicySubtitle),
+                    trailing: const Icon(Icons.open_in_new, size: 20),
+                    onTap: () => _openPrivacyPolicy(context, strings),
+                  ),
+                  const Divider(height: 16),
+
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.tune),
+                    title: Text(strings.adConsentSettingsTitle),
+                    subtitle: Text(strings.adConsentSettingsSubtitle),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      AdService.instance.showPrivacyOptionsForm(
+                        onNotRequired: () {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(strings.adConsentNotRequiredMessage),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        },
+                        onError: (msg) {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(msg),
+                              backgroundColor: Theme.of(context).colorScheme.error,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // 6. config.json Visualizer & Raw Editor (Hidden in production)
+          /*
           Card(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
@@ -465,6 +596,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ),
+          */
           const SizedBox(height: 32),
         ],
       ),
