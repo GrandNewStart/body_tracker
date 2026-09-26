@@ -142,4 +142,13 @@ class AppStrings {
   String get reminderFixedTimeBody => isKorean ? '오늘의 4방향 사진과 몸무게를 기록해보세요.' : 'Take your daily 4 photos and record your weight.';
   String get reminderLateTitle => isKorean ? '오늘 기록을 잊으셨나요?' : 'Forgot to record, today?';
   String get reminderLateBody => isKorean ? '하루가 지나기 전에 오늘 몸의 변화를 기록해두세요!' : 'Record your body changes before the day ends!';
+
+  // Rewarded Ads & Video Render
+  String get watchAdToRender => isKorean ? '광고 시청 후 비디오 생성' : 'Watch Ad to Render';
+  String get watchAdPromptMessage => isKorean
+      ? '짧은 리워드 광고(15~30초)를 시청한 후 고화질 타임랩스 비디오를 생성합니다.'
+      : 'Watch a short video ad (15~30s) to render your progression time-lapse.';
+  String get adMustBeWatchedToRender => isKorean
+      ? '광고를 끝까지 시청해야 비디오를 생성할 수 있습니다.'
+      : 'You must watch the full ad to render the video.';
 }

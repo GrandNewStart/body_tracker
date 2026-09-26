@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'models/app_config.dart';
 import 'screens/splash_screen.dart';
+import 'services/ad_service.dart';
 import 'services/config_service.dart';
 import 'services/ml_service.dart';
 import 'services/notification_service.dart';
@@ -29,6 +30,7 @@ void main() async {
   await TtsService.instance.init(ConfigService.instance.config.language);
   await NotificationService.instance.init();
   MlService.instance.init();
+  await AdService.instance.init();
 
   // Schedule reminders based on config
   final hasRecordedToday = StorageService.instance.hasRecordedToday();

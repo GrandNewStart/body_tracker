@@ -3,6 +3,7 @@ import '../l10n/app_strings.dart';
 import '../models/body_angle.dart';
 import '../models/body_record.dart';
 import '../models/video_render_settings.dart';
+import '../services/ad_service.dart';
 import '../services/config_service.dart';
 import '../services/storage_service.dart';
 import '../services/video_service.dart';
@@ -22,6 +23,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   double _renderProgress = 0.0;
   int _currentSlideIndex = 0;
   int _totalSlideCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    AdService.instance.loadRewardedAd();
+  }
 
   void _navigateToCapture() {
     Navigator.of(context).push(
@@ -204,6 +211,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                          const SizedBox(height: 8),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.smart_display_outlined,
+                                size: 16,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  strings.watchAdPromptMessage,
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: Theme.of(context).colorScheme.primary,
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -234,10 +261,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
       },
     );
 
-    if (settings != null) {
-      _startVideoRendering(
-        slideInterval: settings.slideInterval,
-        selectedAngles: settings.selectedAngles,
+    if (settings != null && mounted) {
+      AdService.instance.showRewardedAd(
+        onRewardEarned: () {
+          if (!mounted) return;
+          _startVideoRendering(
+            slideInterval: settings.slideInterval,
+            selectedAngles: settings.selectedAngles,
+          );
+        },
+        onAdDismissedWithoutReward: () {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(strings.adMustBeWatchedToRender),
+              backgroundColor: Theme.of(context).colorScheme.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
       );
     }
   }
