@@ -142,4 +142,27 @@ class AppStrings {
   String get reminderFixedTimeBody => isKorean ? '오늘의 4방향 사진과 몸무게를 기록해보세요.' : 'Take your daily 4 photos and record your weight.';
   String get reminderLateTitle => isKorean ? '오늘 기록을 잊으셨나요?' : 'Forgot to record, today?';
   String get reminderLateBody => isKorean ? '하루가 지나기 전에 오늘 몸의 변화를 기록해두세요!' : 'Record your body changes before the day ends!';
+
+  // Rewarded Ads & Video Render
+  String get watchAdToRender => isKorean ? '광고 시청 후 비디오 생성' : 'Watch Ad to Render';
+  String get watchAdPromptMessage => isKorean
+      ? '짧은 리워드 광고(15~30초)를 시청한 후 고화질 타임랩스 비디오를 생성합니다.'
+      : 'Watch a short video ad (15~30s) to render your progression time-lapse.';
+  String get adMustBeWatchedToRender => isKorean
+      ? '광고를 끝까지 시청해야 비디오를 생성할 수 있습니다.'
+      : 'You must watch the full ad to render the video.';
+
+  // Privacy & Legal
+  String get privacySection => isKorean ? '개인정보 보호 및 약관' : 'Privacy & Legal';
+  String get privacyPolicyTitle => isKorean ? '개인정보 처리방침' : 'Privacy Policy';
+  String get privacyPolicySubtitle => isKorean
+      ? '모든 사진과 측정 데이터는 기기 내에만 안전하게 보관됩니다.'
+      : 'All photos and measurements remain 100% on your device.';
+  String get adConsentSettingsTitle => isKorean ? '광고 개인정보 및 동의 설정' : 'Ad Privacy & Consent';
+  String get adConsentSettingsSubtitle => isKorean
+      ? '개인 맞춤형 광고 동의 여부를 관리합니다.'
+      : 'Manage your advertising consent choices.';
+  String get adConsentNotRequiredMessage => isKorean
+      ? '현재 거주 지역(대한민국 등)에서는 광고 동의 설정이 필요하지 않습니다 (EU/EEA 및 영국 지역 사용자 전용).'
+      : 'Ad consent management is not required in your region (only applicable to EU/EEA and UK users).';
 }

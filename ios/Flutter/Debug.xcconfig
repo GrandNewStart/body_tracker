@@ -1,2 +1,8 @@
 #include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"
 #include "Generated.xcconfig"
+
+// Default AdMob iOS App ID (Google Test ID fallback)
+ADMOB_IOS_APP_ID = ca-app-pub-3940256099942544~1458002511
+
+// Include secrets if present (local or generated in CI)
+#include? "Secrets.xcconfig"

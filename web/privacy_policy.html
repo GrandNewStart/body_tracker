@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">
+    <title>Privacy Policy - Body Tracker</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #eff6ff;
+            --text-main: #1f2937;
+            --text-muted: #4b5563;
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --border: #e2e8f0;
+            --code-bg: #f1f5f9;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #3b82f6;
+                --primary-light: #1e293b;
+                --text-main: #f8fafc;
+                --text-muted: #94a3b8;
+                --bg-page: #0f172a;
+                --bg-card: #1e293b;
+                --border: #334155;
+                --code-bg: #0f172a;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.65;
+            color: var(--text-main);
+            background-color: var(--bg-page);
+            padding: 32px 16px;
+            overflow-x: hidden;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .container {
+            max-width: 820px;
+            width: 100%;
+            margin: 0 auto;
+            background: var(--bg-card);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+        }
+
+        header {
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 20px;
+            margin-bottom: 28px;
+        }
+
+        .app-badge {
+            display: inline-block;
+            background: var(--primary-light);
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            margin-bottom: 10px;
+            letter-spacing: 0.02em;
+        }
+
+        h1 {
+            font-size: 2.1rem;
+            font-weight: 800;
+            line-height: 1.25;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        .meta {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+        }
+
+        h2 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            line-height: 1.35;
+            margin-top: 36px;
+            margin-bottom: 12px;
+            color: var(--text-main);
+        }
+
+        p, ul, ol {
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            font-size: 1rem;
+        }
+
+        ul {
+            padding-left: 24px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        strong {
+            color: var(--text-main);
+        }
+
+        .callout {
+            background-color: var(--primary-light);
+            border-left: 4px solid var(--primary);
+            padding: 16px 20px;
+            border-radius: 0 10px 10px 0;
+            margin: 24px 0;
+        }
+
+        .callout p {
+            margin: 0;
+            color: var(--text-main);
+            font-weight: 500;
+            font-size: 0.98rem;
+        }
+
+        /* Desktop Table Styling */
+        .table-responsive {
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.93rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        th {
+            background-color: var(--code-bg);
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            margin-top: 44px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* ========================================================
+           Mobile Adaptive Enhancements (< 640px)
+           ======================================================== */
+        @media (max-width: 640px) {
+            body {
+                padding: 12px 8px;
+            }
+
+            .container {
+                padding: 22px 16px;
+                border-radius: 12px;
+                box-shadow: none;
+            }
+
+            header {
+                padding-bottom: 16px;
+                margin-bottom: 20px;
+            }
+
+            h1 {
+                font-size: 1.55rem;
+            }
+
+            .meta {
+                font-size: 0.82rem;
+            }
+
+            h2 {
+                font-size: 1.18rem;
+                margin-top: 28px;
+                margin-bottom: 10px;
+            }
+
+            p, ul, ol {
+                font-size: 0.93rem;
+                line-height: 1.6;
+                margin-bottom: 14px;
+            }
+
+            ul {
+                padding-left: 18px;
+            }
+
+            .callout {
+                padding: 12px 14px;
+                margin: 18px 0;
+            }
+
+            .callout p {
+                font-size: 0.9rem;
+            }
+
+            /* Transform Table into Mobile Card List */
+            .table-responsive {
+                border: none;
+                margin: 14px 0;
+            }
+
+            .table-responsive table,
+            .table-responsive tbody,
+            .table-responsive tr,
+            .table-responsive td {
+                display: block;
+                width: 100%;
+                border: none;
+            }
+
+            .table-responsive thead {
+                display: none;
+            }
+
+            .table-responsive tr {
+                background: var(--code-bg);
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                padding: 14px;
+                margin-bottom: 12px;
+            }
+
+            .table-responsive td {
+                padding: 3px 0;
+                font-size: 0.9rem;
+            }
+
+            .table-responsive td[data-label="Permission"] {
+                font-size: 1rem;
+                color: var(--primary);
+                font-weight: 700;
+                padding-bottom: 4px;
+                margin-bottom: 4px;
+                border-bottom: 1px dashed var(--border);
+            }
+
+            .table-responsive td[data-label="Platform"]::before {
+                content: "Platform: ";
+                font-weight: 600;
+                color: var(--text-main);
+            }
+
+            .table-responsive td[data-label="Purpose"] {
+                margin-top: 4px;
+                line-height: 1.5;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <span class="app-badge">Official Privacy Policy</span>
+        <h1>Privacy Policy for Body Tracker</h1>
+        <div class="meta">
+            Effective Date: September 26, 2026 &bull; Version 1.0
+        </div>
+    </header>
+
+    <div class="callout">
+        <p><strong>Core Privacy Guarantee:</strong> Body Tracker operates on a strict <strong>100% on-device, local-first</strong> architecture. Your photos, body weight, facial biometrics, and progress records are NEVER uploaded to any remote server or cloud database.</p>
+    </div>
+
+    <h2>1. Introduction</h2>
+    <p>
+        <strong>Body Tracker</strong> ("we", "our", or "the App") is developed as an on-device personal physique tracking tool. We believe your physical appearance, health measurements, and personal photographs are among the most sensitive personal data you own. This Privacy Policy describes how information is handled when you use the Body Tracker mobile application on iOS and Android.
+    </p>
+
+    <h2>2. Data We DO NOT Collect</h2>
+    <p>Unlike cloud-based fitness apps, Body Tracker does not require an account, email address, password, or login. We do not maintain any cloud backend or servers. Specifically:</p>
+    <ul>
+        <li><strong>No Cloud Storage:</strong> Photos you take never leave your physical device.</li>
+        <li><strong>No Biometric Transmission:</strong> Pose landmarks and facial tracking coordinates are computed in transient volatile memory (RAM) and are never stored remotely or shared.</li>
+        <li><strong>No Account Profiling:</strong> We do not know who you are, your name, age, email, or identity.</li>
+    </ul>
+
+    <h2>3. Device Permissions &amp; How They Are Used</h2>
+    <p>To provide core body-tracking and video-generation features, the App requests access to certain device capabilities:</p>
+    
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Permission</th>
+                    <th>Platform</th>
+                    <th>Purpose &amp; Data Handling</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td data-label="Permission"><strong>Camera</strong></td>
+                    <td data-label="Platform">iOS &amp; Android</td>
+                    <td data-label="Purpose">Captures guided 4-angle physique photos. Frames are processed live on-device by ML Kit to detect your pose and framing.</td>
+                </tr>
+                <tr>
+                    <td data-label="Permission"><strong>Biometrics (Face ID / Fingerprint)</strong></td>
+                    <td data-label="Platform">iOS &amp; Android</td>
+                    <td data-label="Purpose">Used strictly through native system APIs (Apple LocalAuthentication / Android BiometricPrompt) to lock and unlock the App. The App never sees or stores your biometric data.</td>
+                </tr>
+                <tr>
+                    <td data-label="Permission"><strong>Photo Library / Storage</strong></td>
+                    <td data-label="Platform">iOS &amp; Android</td>
+                    <td data-label="Purpose">Used only when you explicitly export a rendered progression video or photo to your device's Photos gallery.</td>
+                </tr>
+                <tr>
+                    <td data-label="Permission"><strong>Notifications</strong></td>
+                    <td data-label="Platform">iOS &amp; Android</td>
+                    <td data-label="Purpose">Allows scheduling local on-device reminders to log daily or weekly progress. Notifications are generated locally by your phone operating system without push servers.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>4. On-Device Computer Vision &amp; Identity Protection</h2>
+    <p>
+        Body Tracker incorporates <strong>Google ML Kit</strong> (Pose Detection and Face Detection) to provide smart capture assistance and identity masking:
+    </p>
+    <ul>
+        <li><strong>Local Processing:</strong> All machine learning models execute entirely offline on your phone's processor (CPU/GPU/NPU). No images or video feeds are sent to Google or any remote server for computer vision analysis.</li>
+        <li><strong>Facial Mosaic Blur:</strong> If you choose to blur your face, the App applies a localized pixelation filter directly to the image buffer on your device. When saved or permanently applied, facial details are permanently altered in the local image file and cannot be mathematically reconstructed.</li>
+    </ul>
+
+    <h2>5. Third-Party Advertising (Google AdMob)</h2>
+    <p>
+        To support ongoing maintenance and provide video compilation features for free, Body Tracker displays rewarded video advertisements served by <strong>Google AdMob</strong> (Google Mobile Ads SDK).
+    </p>
+    <p>
+        When an advertisement is requested or shown, Google AdMob may automatically collect and process certain device information, including:
+    </p>
+    <ul>
+        <li>Device identifiers (such as Apple IDFA or Google Advertising ID).</li>
+        <li>IP address (used to estimate general location, such as city or country, and prevent fraudulent ad clicks).</li>
+        <li>Ad interaction metrics (e.g., whether a rewarded ad was watched to completion).</li>
+        <li>Diagnostic and performance telemetry (crash logs, app performance).</li>
+    </ul>
+    <p>
+        Google's use of this data is governed by the <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener noreferrer">Google Privacy &amp; Terms for Advertising</a>.
+    </p>
+
+    <h2>6. User Consent Management (GDPR, UK GDPR, &amp; CCPA)</h2>
+    <p>
+        We respect international privacy regulations. Body Tracker implements the <strong>Google User Messaging Platform (UMP)</strong> SDK:
+    </p>
+    <ul>
+        <li><strong>European Economic Area (EEA) &amp; UK:</strong> Users are presented with a certified consent form before personalized ads are requested. You can choose whether to consent to personalized advertising, non-personalized advertising, or manage individual ad partner vendors.</li>
+        <li><strong>Revoking / Updating Consent:</strong> You can review or modify your privacy choices at any time directly through the <em>Privacy Options</em> setting in the App's Settings menu.</li>
+        <li><strong>California (CCPA / CPRA):</strong> We do not sell your personal information. AdMob processes device data in accordance with California consumer privacy guidelines.</li>
+    </ul>
+
+    <h2>7. Data Storage &amp; Right to Erasure</h2>
+    <p>
+        All records, timestamps, body weights, and photos are stored strictly in your device's private sandboxed app directory (`getApplicationDocumentsDirectory()`) and hardware-encrypted storage (`flutter_secure_storage`).
+    </p>
+    <ul>
+        <li><strong>Deletion:</strong> Deleting a record inside the App permanently erases the associated photos from your device storage immediately.</li>
+        <li><strong>Uninstalling:</strong> Removing or uninstalling Body Tracker from your device permanently purges all saved records, photos, PIN codes, and preferences. Because we do not keep cloud backups, uninstalled data cannot be recovered.</li>
+    </ul>
+
+    <h2>8. Children's Privacy (COPPA)</h2>
+    <p>
+        Body Tracker is not directed to children under the age of 13. We do not knowingly collect personal data from children.
+    </p>
+
+    <h2>9. Changes to This Privacy Policy</h2>
+    <p>
+        We may update this Privacy Policy from time to time to reflect changes in our app features, legal requirements, or advertising practices. The updated version will be indicated by the "Effective Date" at the top of this document.
+    </p>
+
+    <h2>10. Contact Us</h2>
+    <p>
+        If you have any questions or feedback regarding this Privacy Policy or the privacy practices of Body Tracker, please contact us at:
+    </p>
+    <p>
+        <strong>Email:</strong> <a href="mailto:support@bluelemonade.dev">support@bluelemonade.dev</a><br>
+        <strong>Website:</strong> <a href="https://bluelemonade.co.kr" target="_blank" rel="noopener noreferrer">bluelemonade.co.kr</a>
+    </p>
+
+    <footer>
+        &copy; 2026 Body Tracker. All rights reserved. Built with privacy-first architecture.
+    </footer>
+</div>
+
+</body>
+</html>

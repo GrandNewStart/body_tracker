@@ -43,6 +43,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/build/
+/android/.gradle/
+/android/app/build/
 
 # Keystores & Signing Keys
 *.keystore
@@ -54,6 +57,8 @@ android/local.properties
 .env
 .env.*
 *.local
+secrets.json
+ios/Flutter/Secrets.xcconfig
 
 # Jupyter / Scratch files
 *.ipynb
