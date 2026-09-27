@@ -1,7 +1,17 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+val keystorePropertiesFile = rootProject.file("key.properties").takeIf { it.exists() }
+    ?: rootProject.file("keys.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 android {
@@ -21,7 +31,7 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
-        targetSdk = 35
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 
@@ -31,11 +41,27 @@ android {
         manifestPlaceholders["admobAppId"] = admobAppId
     }
 
+    signingConfigs {
+        create("release") {
+            val keyPath = keystoreProperties["storeFile"] as? String
+            if (keyPath != null) {
+                val f = file(keyPath)
+                storeFile = if (f.isAbsolute) f else rootProject.file(keyPath)
+            }
+            storePassword = keystoreProperties["storePassword"] as? String
+            keyAlias = keystoreProperties["keyAlias"] as? String
+            keyPassword = keystoreProperties["keyPassword"] as? String
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            val releaseSigning = signingConfigs.findByName("release")
+            signingConfig = if (releaseSigning?.storeFile?.exists() == true) {
+                releaseSigning
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }
