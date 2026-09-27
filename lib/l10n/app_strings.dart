@@ -104,6 +104,23 @@ class AppStrings {
   String get fixedTimeCaptureDesc => isKorean ? '지정한 시간에 알림을 받고 촬영' : 'Notify and capture at a scheduled time everyday';
   String get captureTime => isKorean ? '촬영 시간' : 'Capture Time';
   String get dataManagement => isKorean ? '데이터 관리' : 'Data Management';
+  String get exportRecords => isKorean ? '기록 내보내기 (백업)' : 'Export Records (Backup)';
+  String get exportRecordsSubtitle => isKorean
+      ? '사진과 기록을 암호화된 .bodytracker 파일로 내보냅니다'
+      : 'Export photos & records as encrypted .bodytracker file';
+  String get noRecordsToExport => isKorean ? '내보낼 기록이 없습니다. 먼저 기록을 생성해주세요.' : 'No records to export. Please create a record first.';
+  String get exportPasswordTitle => isKorean ? '백업 암호화 비밀번호' : 'Backup Encryption Password';
+  String get exportPasswordPrompt => isKorean
+      ? '백업 파일을 암호화할 비밀번호를 입력하세요.\n복원 시 이 비밀번호가 필요합니다.'
+      : 'Enter a password to encrypt your backup file.\nYou will need this password when importing.';
+  String get password => isKorean ? '비밀번호' : 'Password';
+  String get confirmPassword => isKorean ? '비밀번호 확인' : 'Confirm Password';
+  String get passwordRequired => isKorean ? '비밀번호를 입력해주세요.' : 'Please enter a password.';
+  String get passwordsDoNotMatch => isKorean ? '비밀번호가 일치하지 않습니다.' : 'Passwords do not match.';
+  String get exportingRecords => isKorean ? '기록 압축 및 암호화 중...' : 'Compressing & encrypting records...';
+  String get exportSuccess => isKorean ? '기록 내보내기가 완료되었습니다.' : 'Records exported successfully.';
+  String get exportFailed => isKorean ? '기록 내보내기에 실패했습니다.' : 'Failed to export records.';
+  String get export => isKorean ? '내보내기' : 'Export';
   String get clearAllData => isKorean ? '모든 데이터 초기화' : 'Clear All Data';
   String get clearAllDataConfirm => isKorean ? '정말로 모든 사진과 기록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.' : 'Are you sure you want to delete all photos and records? This cannot be undone.';
   String get configJsonSection => isKorean ? 'config.json 설정 파일' : 'config.json File';

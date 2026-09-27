@@ -5,6 +5,7 @@ import '../models/app_config.dart';
 import '../services/ad_service.dart';
 import '../services/auth_service.dart';
 import '../services/config_service.dart';
+import '../services/export_import_service.dart';
 import '../services/notification_service.dart';
 import '../services/storage_service.dart';
 import 'auth_screen.dart';
@@ -115,6 +116,166 @@ class _SettingsScreenState extends State<SettingsScreen> {
         );
       }
     }
+  }
+
+  Future<void> _handleExport(BuildContext context) async {
+    final strings = AppStrings(ConfigService.instance.config.language);
+    final records = StorageService.instance.records;
+
+    if (records.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(strings.noRecordsToExport)),
+      );
+      return;
+    }
+
+    final password = await _showExportPasswordDialog(context, strings);
+    if (password == null || password.isEmpty) return;
+
+    if (!context.mounted) return;
+
+    // Show loading progress dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          content: Row(
+            children: [
+              const SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(strokeWidth: 3),
+              ),
+              const SizedBox(width: 20),
+              Expanded(child: Text(strings.exportingRecords)),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    try {
+      final exportedFile = await ExportImportService.instance.exportRecords(password: password);
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // dismiss loading dialog
+        await ExportImportService.instance.shareExportedFile(exportedFile);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // dismiss loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${strings.exportFailed}: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<String?> _showExportPasswordDialog(BuildContext context, AppStrings strings) async {
+    final passwordController = TextEditingController();
+    final confirmController = TextEditingController();
+    bool obscurePassword = true;
+    bool obscureConfirm = true;
+    String? errorMessage;
+
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text(strings.exportPasswordTitle),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      strings.exportPasswordPrompt,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: passwordController,
+                      obscureText: obscurePassword,
+                      decoration: InputDecoration(
+                        labelText: strings.password,
+                        border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: Icon(obscurePassword ? Icons.visibility_off : Icons.visibility),
+                          onPressed: () {
+                            setDialogState(() {
+                              obscurePassword = !obscurePassword;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: confirmController,
+                      obscureText: obscureConfirm,
+                      decoration: InputDecoration(
+                        labelText: strings.confirmPassword,
+                        border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: Icon(obscureConfirm ? Icons.visibility_off : Icons.visibility),
+                          onPressed: () {
+                            setDialogState(() {
+                              obscureConfirm = !obscureConfirm;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                    if (errorMessage != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        errorMessage!,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(null),
+                  child: Text(strings.cancel),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    final pwd = passwordController.text;
+                    final confirm = confirmController.text;
+                    if (pwd.isEmpty) {
+                      setDialogState(() {
+                        errorMessage = strings.passwordRequired;
+                      });
+                      return;
+                    }
+                    if (pwd != confirm) {
+                      setDialogState(() {
+                        errorMessage = strings.passwordsDoNotMatch;
+                      });
+                      return;
+                    }
+                    Navigator.of(ctx).pop(pwd);
+                  },
+                  child: Text(strings.export),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   /*
@@ -455,6 +616,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
+
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.upload_file),
+                    title: Text(strings.exportRecords),
+                    subtitle: Text(strings.exportRecordsSubtitle),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => _handleExport(context),
+                  ),
+                  const Divider(height: 16),
 
                   ListTile(
                     contentPadding: EdgeInsets.zero,
