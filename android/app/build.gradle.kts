@@ -15,6 +15,24 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+val pubspecFile = rootProject.projectDir.parentFile.resolve("pubspec.yaml")
+var parsedVersionCode = flutter.versionCode
+var parsedVersionName = flutter.versionName
+
+if (pubspecFile.exists()) {
+    val versionLine = pubspecFile.readLines().firstOrNull { it.trim().startsWith("version:") }
+    if (versionLine != null) {
+        val versionStr = versionLine.substringAfter("version:").trim()
+        val parts = versionStr.split("+")
+        if (parts.isNotEmpty()) {
+            parsedVersionName = parts[0]
+        }
+        if (parts.size > 1) {
+            parts[1].toIntOrNull()?.let { parsedVersionCode = it }
+        }
+    }
+}
+
 android {
     namespace = "dev.bluelemonade.bodytracker"
     compileSdk = 36
@@ -33,8 +51,8 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = 36
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        versionCode = parsedVersionCode ?: 2
+        versionName = parsedVersionName ?: "1.0.0"
 
         val admobAppId = (project.findProperty("ADMOB_ANDROID_APP_ID") as? String)
             ?: System.getenv("ADMOB_ANDROID_APP_ID")
