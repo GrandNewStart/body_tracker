@@ -1,3 +1,4 @@
+import java.io.File
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -45,8 +46,15 @@ android {
         create("release") {
             val keyPath = keystoreProperties["storeFile"] as? String
             if (keyPath != null) {
-                val f = file(keyPath)
-                storeFile = if (f.isAbsolute) f else rootProject.file(keyPath)
+                val rawFile = File(keyPath)
+                storeFile = when {
+                    rawFile.isAbsolute && rawFile.exists() -> rawFile
+                    keystorePropertiesFile.parentFile.resolve(keyPath).normalize().exists() -> keystorePropertiesFile.parentFile.resolve(keyPath).normalize()
+                    rootProject.file(keyPath).exists() -> rootProject.file(keyPath)
+                    rootProject.projectDir.parentFile.resolve(keyPath).normalize().exists() -> rootProject.projectDir.parentFile.resolve(keyPath).normalize()
+                    file(keyPath).exists() -> file(keyPath)
+                    else -> rawFile
+                }
             }
             storePassword = keystoreProperties["storePassword"] as? String
             keyAlias = keystoreProperties["keyAlias"] as? String
