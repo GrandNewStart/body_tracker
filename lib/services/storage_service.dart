@@ -126,6 +126,13 @@ class StorageService {
     await _saveRecordsToDisk();
   }
 
+  Future<void> saveRecords(List<BodyRecord> newRecords) async {
+    final currentList = List<BodyRecord>.from(newRecords);
+    currentList.sort((a, b) => b.date.compareTo(a.date));
+    recordsNotifier.value = currentList;
+    await _saveRecordsToDisk();
+  }
+
   Future<void> updateRecord(BodyRecord updatedRecord) async {
     final currentList = List<BodyRecord>.from(recordsNotifier.value);
     final index = currentList.indexWhere((r) => r.id == updatedRecord.id);

@@ -216,19 +216,35 @@ class ExportImportService {
     }
 
     // Unpack ZIP archive
-    final archive = ZipDecoder().decodeBytes(decryptedBytes);
+    final Archive archive;
+    try {
+      archive = ZipDecoder().decodeBytes(decryptedBytes);
+    } catch (e) {
+      throw const InvalidPackageFormatException('Failed to unpack backup archive');
+    }
+
     final metaFile = archive.findFile('records.json');
     if (metaFile == null) {
       throw const InvalidPackageFormatException('records.json not found in package');
     }
 
-    final metaJson = jsonDecode(utf8.decode(metaFile.content as List<int>)) as Map<String, dynamic>;
+    final Map<String, dynamic> metaJson;
+    try {
+      metaJson = jsonDecode(utf8.decode(metaFile.content as List<int>)) as Map<String, dynamic>;
+    } catch (e) {
+      throw const InvalidPackageFormatException('Corrupted metadata in package');
+    }
+
     final recordsJsonList = metaJson['records'] as List<dynamic>? ?? [];
     final exportedAt = DateTime.tryParse(metaJson['exported_at'] as String? ?? '') ?? DateTime.now();
 
     final List<BodyRecord> parsedRecords = [];
-    for (final item in recordsJsonList) {
-      parsedRecords.add(BodyRecord.fromJson(item as Map<String, dynamic>));
+    try {
+      for (final item in recordsJsonList) {
+        parsedRecords.add(BodyRecord.fromJson(item as Map<String, dynamic>));
+      }
+    } catch (e) {
+      throw const InvalidPackageFormatException('Corrupted record entries in package');
     }
 
     final Map<String, List<int>> photos = {};
@@ -244,6 +260,109 @@ class ExportImportService {
       records: parsedRecords,
       photos: photos,
     );
+  }
+
+  /// Checks whether two records collide (same record ID or same calendar date).
+  static bool isCollision(BodyRecord a, BodyRecord b) {
+    if (a.id == b.id) return true;
+    return a.date.year == b.date.year &&
+        a.date.month == b.date.month &&
+        a.date.day == b.date.day;
+  }
+
+  /// Finds all imported records that collide with existing records.
+  List<BodyRecord> findCollisions(
+    List<BodyRecord> existingRecords,
+    List<BodyRecord> importedRecords,
+  ) {
+    final collisions = <BodyRecord>[];
+    for (final imp in importedRecords) {
+      if (existingRecords.any((ex) => isCollision(ex, imp))) {
+        collisions.add(imp);
+      }
+    }
+    return collisions;
+  }
+
+  /// Restores photo assets to the device storage and merges records into storage.
+  /// If [overwriteCollisions] is true, colliding records overwrite existing data.
+  /// Returns the number of imported/updated records.
+  Future<int> restoreAndMergePackage({
+    required ExportPackageData packageData,
+    required bool overwriteCollisions,
+  }) async {
+    final storage = StorageService.instance;
+    final photosDir = Directory(storage.photosDirPath);
+    if (!await photosDir.exists()) {
+      await photosDir.create(recursive: true);
+    }
+
+    // 1. Write imported photo files to storage.photosDirPath
+    for (final entry in packageData.photos.entries) {
+      final fileName = entry.key.split(RegExp(r'[/\\]')).last;
+      if (fileName.isNotEmpty) {
+        final targetFile = File('${storage.photosDirPath}/$fileName');
+        await targetFile.writeAsBytes(entry.value, flush: true);
+      }
+    }
+
+    // 2. Prepare merged records list
+    final currentRecords = List<BodyRecord>.from(storage.records);
+    int importedCount = 0;
+
+    for (final impRecord in packageData.records) {
+      // Resolve image paths to current photosDirPath
+      String resolvePath(String rawPath) {
+        if (rawPath.isEmpty) return '';
+        final fileName = rawPath.split(RegExp(r'[/\\]')).last;
+        return '${storage.photosDirPath}/$fileName';
+      }
+
+      final resolvedRecord = impRecord.copyWith(
+        frontImagePath: resolvePath(impRecord.frontImagePath),
+        leftImagePath: resolvePath(impRecord.leftImagePath),
+        backImagePath: resolvePath(impRecord.backImagePath),
+        rightImagePath: resolvePath(impRecord.rightImagePath),
+      );
+
+      final collisionIndex = currentRecords.indexWhere(
+        (existing) => isCollision(existing, resolvedRecord),
+      );
+
+      if (collisionIndex != -1) {
+        if (overwriteCollisions) {
+          final oldRecord = currentRecords[collisionIndex];
+          currentRecords[collisionIndex] = resolvedRecord;
+          importedCount++;
+
+          // Clean up old photos that are not used by the new record
+          for (final oldPath in oldRecord.allImagePaths) {
+            if (oldPath.isNotEmpty) {
+              final oldFileName = oldPath.split(RegExp(r'[/\\]')).last;
+              final isUsedInNew = resolvedRecord.allImagePaths.any(
+                (p) => p.endsWith(oldFileName),
+              );
+              if (!isUsedInNew) {
+                try {
+                  final f = File('${storage.photosDirPath}/$oldFileName');
+                  if (f.existsSync()) f.deleteSync();
+                } catch (e) {
+                  debugPrint('Could not delete replaced photo $oldFileName: $e');
+                }
+              }
+            }
+          }
+        }
+      } else {
+        currentRecords.add(resolvedRecord);
+        importedCount++;
+      }
+    }
+
+    // 3. Save records to persistent storage
+    await storage.saveRecords(currentRecords);
+
+    return importedCount;
   }
 
   /// Triggers the system share sheet to save or share the exported file.

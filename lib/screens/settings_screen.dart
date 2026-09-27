@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_strings.dart';
@@ -269,6 +271,310 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Navigator.of(ctx).pop(pwd);
                   },
                   child: Text(strings.export),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _handleImport(BuildContext context) async {
+    final strings = AppStrings(ConfigService.instance.config.language);
+
+    // 1. Pick .bodytracker file from file browser
+    final pickedFile = await FilePicker.pickFile(
+      type: FileType.custom,
+      allowedExtensions: ['bodytracker'],
+    );
+
+    if (pickedFile == null) {
+      // User cancelled picker
+      return;
+    }
+
+    final fileName = pickedFile.name;
+
+    // Check extension
+    if (!fileName.toLowerCase().endsWith('.bodytracker')) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(strings.invalidPackageFormat),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Read bytes
+    final Uint8List packageBytes;
+    try {
+      packageBytes = await pickedFile.readAsBytes();
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${strings.importFailed}: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+      return;
+    }
+
+    if (packageBytes.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(strings.invalidPackageFormat),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+      return;
+    }
+
+    if (!context.mounted) return;
+
+    // 2. Ask user for password
+    final password = await _showImportPasswordDialog(context, strings);
+    if (password == null || password.isEmpty) {
+      // User cancelled dialog
+      return;
+    }
+
+    if (!context.mounted) return;
+
+    // Show loading progress dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          content: Row(
+            children: [
+              const SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(strokeWidth: 3),
+              ),
+              const SizedBox(width: 20),
+              Expanded(child: Text(strings.importingRecords)),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final ExportPackageData packageData;
+    try {
+      packageData = await ExportImportService.instance.decryptPackage(
+        packageBytes: packageBytes,
+        password: password,
+      );
+    } on InvalidPasswordException {
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // dismiss loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(strings.invalidPassword),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+      return;
+    } on InvalidPackageFormatException catch (e) {
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // dismiss loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${strings.invalidPackageFormat}: ${e.message}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+      return;
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // dismiss loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${strings.importFailed}: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+      return;
+    }
+
+    if (context.mounted) {
+      Navigator.of(context, rootNavigator: true).pop(); // dismiss loading
+    }
+
+    if (packageData.records.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(strings.noRecordsInPackage)),
+        );
+      }
+      return;
+    }
+
+    // 3. Collision check
+    final existingRecords = StorageService.instance.records;
+    final collisions = ExportImportService.instance.findCollisions(
+      existingRecords,
+      packageData.records,
+    );
+
+    bool shouldOverwrite = false;
+    if (collisions.isNotEmpty) {
+      if (!context.mounted) return;
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(strings.overwriteCollisionTitle),
+          content: Text(strings.overwriteCollisionPrompt(collisions.length)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(strings.no),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(strings.yes),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm != true) {
+        // User clicked 'No' or closed dialog -> Abort import!
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(strings.importAborted)),
+          );
+        }
+        return;
+      }
+      shouldOverwrite = true;
+    }
+
+    if (!context.mounted) return;
+
+    // 4. Restore and merge data
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          content: Row(
+            children: [
+              const SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(strokeWidth: 3),
+              ),
+              const SizedBox(width: 20),
+              Expanded(child: Text(strings.importingRecords)),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    try {
+      final importedCount = await ExportImportService.instance.restoreAndMergePackage(
+        packageData: packageData,
+        overwriteCollisions: shouldOverwrite,
+      );
+
+      final hasRecordedToday = StorageService.instance.hasRecordedToday();
+      await NotificationService.instance.updateSchedules(
+        ConfigService.instance.config,
+        hasRecordedToday,
+      );
+
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // dismiss loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${strings.importSuccess} ($importedCount)'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // dismiss loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${strings.importFailed}: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<String?> _showImportPasswordDialog(BuildContext context, AppStrings strings) async {
+    final passwordController = TextEditingController();
+    bool obscurePassword = true;
+
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text(strings.importPasswordTitle),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      strings.importPasswordPrompt,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: passwordController,
+                      obscureText: obscurePassword,
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        labelText: strings.password,
+                        border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: Icon(obscurePassword ? Icons.visibility_off : Icons.visibility),
+                          onPressed: () {
+                            setDialogState(() {
+                              obscurePassword = !obscurePassword;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(null),
+                  child: Text(strings.cancel),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    final pwd = passwordController.text;
+                    if (pwd.isNotEmpty) {
+                      Navigator.of(ctx).pop(pwd);
+                    }
+                  },
+                  child: Text(strings.importAction),
                 ),
               ],
             );
@@ -624,6 +930,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     subtitle: Text(strings.exportRecordsSubtitle),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => _handleExport(context),
+                  ),
+                  const Divider(height: 16),
+
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.file_download),
+                    title: Text(strings.importRecords),
+                    subtitle: Text(strings.importRecordsSubtitle),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => _handleImport(context),
                   ),
                   const Divider(height: 16),
 

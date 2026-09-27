@@ -121,6 +121,30 @@ class AppStrings {
   String get exportSuccess => isKorean ? '기록 내보내기가 완료되었습니다.' : 'Records exported successfully.';
   String get exportFailed => isKorean ? '기록 내보내기에 실패했습니다.' : 'Failed to export records.';
   String get export => isKorean ? '내보내기' : 'Export';
+  String get importRecords => isKorean ? '기록 가져오기 (복원)' : 'Import Records (Restore)';
+  String get importRecordsSubtitle => isKorean
+      ? '암호화된 .bodytracker 파일에서 기록을 복원합니다'
+      : 'Restore records from encrypted .bodytracker file';
+  String get importPasswordTitle => isKorean ? '백업 파일 비밀번호 입력' : 'Enter Backup Password';
+  String get importPasswordPrompt => isKorean
+      ? '백업 생성 시 설정한 비밀번호를 입력해주세요.'
+      : 'Enter the password used when exporting this backup.';
+  String get importingRecords => isKorean ? '기록 복원 중...' : 'Restoring records...';
+  String get importSuccess => isKorean ? '기록을 성공적으로 가져왔습니다.' : 'Records imported successfully.';
+  String get importFailed => isKorean ? '기록 가져오기에 실패했습니다.' : 'Failed to import records.';
+  String get invalidPassword => isKorean ? '비밀번호가 올바르지 않습니다.' : 'Invalid password.';
+  String get invalidPackageFormat => isKorean
+      ? '손상되었거나 올바르지 않은 패키지 파일입니다.'
+      : 'Corrupted or invalid package file.';
+  String get overwriteCollisionTitle => isKorean ? '기존 기록 덮어쓰기' : 'Overwrite Existing Records?';
+  String overwriteCollisionPrompt(int count) => isKorean
+      ? '기존 기록과 날짜 또는 ID가 일치하는 기록이 $count개 있습니다.\n기존 기록을 모두 덮어쓰시겠습니까?'
+      : 'Found $count record(s) colliding with existing records (same date or ID).\nDo you want to overwrite all colliding records?';
+  String get importAborted => isKorean ? '가져오기가 취소되었습니다.' : 'Import cancelled.';
+  String get noRecordsInPackage => isKorean ? '가져올 기록이 패키지에 없습니다.' : 'No records found in package.';
+  String get yes => isKorean ? '예' : 'Yes';
+  String get no => isKorean ? '아니오' : 'No';
+  String get importAction => isKorean ? '가져오기' : 'Import';
   String get clearAllData => isKorean ? '모든 데이터 초기화' : 'Clear All Data';
   String get clearAllDataConfirm => isKorean ? '정말로 모든 사진과 기록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.' : 'Are you sure you want to delete all photos and records? This cannot be undone.';
   String get configJsonSection => isKorean ? 'config.json 설정 파일' : 'config.json File';
