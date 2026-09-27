@@ -2,7 +2,7 @@ name: CI / CD Pipeline
 
 on:
   push:
-    branches: [ main, "feature/**" ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -37,10 +37,11 @@ jobs:
       - name: Run Test Suite
         run: flutter test
 
-  # 2. Android Build (APK & App Bundle for Google Play)
+  # 2. Android Build (APK & App Bundle for Google Play) - Only runs on main branch deployment
   build_android:
     name: Build Android Release (AAB & APK)
     needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
