@@ -14,7 +14,11 @@ class ConfigService {
   static const String _nonceKey = 'app_nonce';
   static const String _configFileName = 'config.json';
 
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      resetOnError: true,
+    ),
+  );
   late File _configFile;
   late String _appNonce;
 
@@ -28,12 +32,22 @@ class ConfigService {
     _configFile = File('${docsDir.path}/$_configFileName');
 
     // Load or generate app_nonce (32 random bytes stored in Keychain / Keystore)
-    String? storedNonce = await _secureStorage.read(key: _nonceKey);
+    String? storedNonce;
+    try {
+      storedNonce = await _secureStorage.read(key: _nonceKey);
+    } catch (e) {
+      debugPrint('Error reading app_nonce from secure storage: $e');
+    }
+
     if (storedNonce == null || storedNonce.isEmpty) {
       final random = Random.secure();
       final bytes = List<int>.generate(32, (_) => random.nextInt(256));
       storedNonce = bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
-      await _secureStorage.write(key: _nonceKey, value: storedNonce);
+      try {
+        await _secureStorage.write(key: _nonceKey, value: storedNonce);
+      } catch (e) {
+        debugPrint('Error writing app_nonce to secure storage: $e');
+      }
     }
     _appNonce = storedNonce;
 

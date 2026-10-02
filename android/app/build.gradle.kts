@@ -54,8 +54,8 @@ android {
         versionCode = parsedVersionCode ?: 2
         versionName = parsedVersionName ?: "1.0.0"
 
-        val admobAppId = (project.findProperty("ADMOB_ANDROID_APP_ID") as? String)
-            ?: System.getenv("ADMOB_ANDROID_APP_ID")
+        val admobAppId = (project.findProperty("ADMOB_ANDROID_APP_ID") as? String)?.takeIf { it.isNotBlank() }
+            ?: System.getenv("ADMOB_ANDROID_APP_ID")?.takeIf { it.isNotBlank() }
             ?: "ca-app-pub-3940256099942544~3347511713"
         manifestPlaceholders["admobAppId"] = admobAppId
     }
@@ -88,6 +88,10 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }

@@ -24,20 +24,58 @@ void main() async {
   await initializeDateFormatting();
 
   // Initialize core services
-  await ConfigService.instance.init();
-  await StorageService.instance.init();
-  await SoundService.instance.init();
-  await TtsService.instance.init(ConfigService.instance.config.language);
-  await NotificationService.instance.init();
-  MlService.instance.init();
-  await AdService.instance.init();
+  try {
+    await ConfigService.instance.init();
+  } catch (e) {
+    debugPrint('ConfigService init failed: $e');
+  }
+
+  try {
+    await StorageService.instance.init();
+  } catch (e) {
+    debugPrint('StorageService init failed: $e');
+  }
+
+  try {
+    await SoundService.instance.init();
+  } catch (e) {
+    debugPrint('SoundService init failed: $e');
+  }
+
+  try {
+    await TtsService.instance.init(ConfigService.instance.config.language);
+  } catch (e) {
+    debugPrint('TtsService init failed: $e');
+  }
+
+  try {
+    await NotificationService.instance.init();
+  } catch (e) {
+    debugPrint('NotificationService init failed: $e');
+  }
+
+  try {
+    MlService.instance.init();
+  } catch (e) {
+    debugPrint('MlService init failed: $e');
+  }
+
+  try {
+    await AdService.instance.init();
+  } catch (e) {
+    debugPrint('AdService init failed: $e');
+  }
 
   // Schedule reminders based on config
-  final hasRecordedToday = StorageService.instance.hasRecordedToday();
-  await NotificationService.instance.updateSchedules(
-    ConfigService.instance.config,
-    hasRecordedToday,
-  );
+  try {
+    final hasRecordedToday = StorageService.instance.hasRecordedToday();
+    await NotificationService.instance.updateSchedules(
+      ConfigService.instance.config,
+      hasRecordedToday,
+    );
+  } catch (e) {
+    debugPrint('updateSchedules failed: $e');
+  }
 
   runApp(const BodyTrackerApp());
 }
