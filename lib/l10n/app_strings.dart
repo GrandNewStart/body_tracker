@@ -91,8 +91,8 @@ class AppStrings {
   String get settingsTitle => isKorean ? '설정' : 'Settings';
   String get languageTitle => isKorean ? '언어' : 'Language';
   String get themeTitle => isKorean ? '테마' : 'Theme';
-  String get lightTheme => isKorean ? '라이트 모드' : 'Light Mode';
-  String get darkTheme => isKorean ? '다크 모드' : 'Dark Mode';
+  String get lightTheme => isKorean ? '라이트' : 'Light';
+  String get darkTheme => isKorean ? '다크' : 'Dark';
   String get securitySection => isKorean ? '보안' : 'Security';
   String get changePin => isKorean ? 'PIN 번호 변경' : 'Change PIN';
   String get useLocalAuthTitle => isKorean ? '생체 인증 사용' : 'Use Biometric Authentication';
