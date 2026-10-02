@@ -872,7 +872,6 @@ class CaptureScreenState extends State<CaptureScreen> with TickerProviderStateMi
     }
 
     return Container(
-      padding: const EdgeInsets.only(bottom: 32, top: 16, left: 20, right: 20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.bottomCenter,
@@ -883,64 +882,70 @@ class CaptureScreenState extends State<CaptureScreen> with TickerProviderStateMi
           ],
         ),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Live guidance badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: badgeColor,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              guideText,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Shoot button (or progress indicator if session is active)
-          if (!_isSessionActive)
-            FilledButton.icon(
-              style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-              ),
-              icon: const Icon(Icons.play_arrow_rounded, size: 28),
-              label: Text(
-                strings.shoot,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              onPressed: _startShootSession,
-            )
-          else
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(4, (index) {
-                final isDone = index < _currentAngleIndex;
-                final isCurrent = index == _currentAngleIndex;
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 6),
-                  width: isCurrent ? 24 : 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: isDone
-                        ? Colors.greenAccent
-                        : (isCurrent ? Colors.white : Colors.white24),
-                    borderRadius: BorderRadius.circular(6),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 20, top: 16, left: 20, right: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Live guidance badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: badgeColor,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  guideText,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
                   ),
-                );
-              }),
-            ),
-        ],
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Shoot button (or progress indicator if session is active)
+              if (!_isSessionActive)
+                FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  ),
+                  icon: const Icon(Icons.play_arrow_rounded, size: 28),
+                  label: Text(
+                    strings.shoot,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  onPressed: _startShootSession,
+                )
+              else
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(4, (index) {
+                    final isDone = index < _currentAngleIndex;
+                    final isCurrent = index == _currentAngleIndex;
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 6),
+                      width: isCurrent ? 24 : 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: isDone
+                            ? Colors.greenAccent
+                            : (isCurrent ? Colors.white : Colors.white24),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    );
+                  }),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
