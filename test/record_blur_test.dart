@@ -217,5 +217,92 @@ void main() {
       expect(resultRecord!.isMasked, isTrue);
       expect(StorageService.instance.recordsNotifier.value.first.isMasked, isTrue);
     });
+
+    testWidgets('RecordScreen photo preview is safearea-aware and has bottom margin', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RecordScreen(record: testRecord),
+        ),
+      );
+      await tester.pump();
+
+      // Verify SafeArea wrapping TabBarView
+      final safeAreaFinder = find.ancestor(
+        of: find.byType(TabBarView),
+        matching: find.byType(SafeArea),
+      );
+      expect(safeAreaFinder, findsOneWidget);
+
+      final safeArea = tester.widget<SafeArea>(safeAreaFinder);
+      expect(safeArea.top, isFalse);
+      expect(safeArea.bottom, isTrue);
+
+      // Verify bottom margin padding directly wrapping TabBarView
+      final paddingFinder = find.ancestor(
+        of: find.byType(TabBarView),
+        matching: find.byType(Padding),
+      ).first;
+
+      final padding = tester.widget<Padding>(paddingFinder);
+      expect((padding.padding as EdgeInsets).bottom, greaterThanOrEqualTo(16.0));
+
+      // Verify container matches the Weight & Info banner color
+      final containerFinder = find.ancestor(
+        of: safeAreaFinder,
+        matching: find.byType(Container),
+      ).first;
+      final container = tester.widget<Container>(containerFinder);
+      final theme = Theme.of(tester.element(safeAreaFinder));
+      expect(
+        container.color,
+        theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+      );
+    });
+
+    testWidgets('RecordScreen navigates to previous and next record by vertical scroll', (tester) async {
+      final now = DateTime.now();
+      final record1 = testRecord.copyWith(
+        id: 'rec-1',
+        weight: 75.0,
+        date: now.subtract(const Duration(days: 1)),
+      );
+      final record2 = testRecord.copyWith(
+        id: 'rec-2',
+        weight: 74.2,
+        date: now,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RecordScreen(
+            record: record2,
+            allRecords: [record2, record1],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Initially on record2 (74.2 kg, (1/2))
+      expect(find.text('74.2 kg'), findsOneWidget);
+      expect(find.text('(1/2)'), findsOneWidget);
+
+      final verticalPageViewFinder = find.byWidgetPredicate(
+        (widget) => widget is PageView && widget.scrollDirection == Axis.vertical,
+      );
+
+      // Drag up to scroll vertically to the next record (record1: 75.0 kg, (2/2))
+      await tester.drag(verticalPageViewFinder, const Offset(0, -500));
+      await tester.pumpAndSettle();
+
+      expect(find.text('75.0 kg'), findsOneWidget);
+      expect(find.text('(2/2)'), findsOneWidget);
+
+      // Drag down to scroll back to previous record (record2)
+      await tester.drag(verticalPageViewFinder, const Offset(0, 500));
+      await tester.pumpAndSettle();
+
+      expect(find.text('74.2 kg'), findsOneWidget);
+      expect(find.text('(1/2)'), findsOneWidget);
+    });
   });
 }

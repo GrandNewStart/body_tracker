@@ -16,19 +16,34 @@ class SoundService {
     _isInitialized = true;
   }
 
+  @visibleForTesting
+  void resetForTest() {
+    _player = AudioPlayer();
+    _isInitialized = false;
+  }
+
   Future<void> init() async {
     if (_isInitialized) return;
     try {
       // Configure audio context so playback ignores the hardware Ring/Silent switch
-      // on iOS and plays on the media stream on Android.
-      AudioPlayer.global.setAudioContext(
-        AudioContextConfig(
-          respectSilence: false, // Overrides silent mode switch
-          focus: AudioContextConfigFocus.duckOthers, // Ducks other background audio during playback
-          stayAwake: false,
-        ).build(),
-      );
+      // on iOS and plays on the media/sonification stream on Android.
+      final audioContext = AudioContextConfig(
+        respectSilence: false, // Overrides silent mode switch
+        focus: AudioContextConfigFocus.duckOthers, // Ducks other background audio during playback
+        stayAwake: false,
+      ).build();
+
+      await AudioPlayer.global.setAudioContext(audioContext);
+      await _player.setAudioContext(audioContext);
       await _player.setReleaseMode(ReleaseMode.stop);
+
+      // Pre-cache asset into local filesystem to eliminate extraction latency on capture
+      try {
+        await AudioCache.instance.loadPath('camera_shutter.wav');
+      } catch (e) {
+        debugPrint('Error preloading shutter sound: $e');
+      }
+
       _isInitialized = true;
     } catch (e) {
       debugPrint('Error initializing SoundService: $e');

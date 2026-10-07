@@ -173,7 +173,12 @@ class CaptureScreenState extends State<CaptureScreen> with TickerProviderStateMi
         return;
       }
 
-      final imageSize = Size(image.width.toDouble(), image.height.toDouble());
+      final isRotated = Platform.isAndroid &&
+          (inputImage.metadata?.rotation == InputImageRotation.rotation90deg ||
+              inputImage.metadata?.rotation == InputImageRotation.rotation270deg);
+      final imageSize = isRotated
+          ? Size(image.height.toDouble(), image.width.toDouble())
+          : Size(image.width.toDouble(), image.height.toDouble());
       final result = await MlService.instance.processCameraImage(
         inputImage,
         imageSize,
@@ -410,11 +415,11 @@ class CaptureScreenState extends State<CaptureScreen> with TickerProviderStateMi
     final strings = AppStrings(ConfigService.instance.config.language);
 
     try {
-      // Explicitly play mechanical camera shutter sound (configured for silent mode playback)
-      unawaited(SoundService.instance.playShutter());
-
       // Visual flash
       _flashController.forward(from: 0.0).then((_) => _flashController.reverse());
+
+      // Explicitly play mechanical camera shutter sound (configured for silent mode playback)
+      await SoundService.instance.playShutter();
 
       XFile photo;
       if (_cameraController != null && _cameraController!.value.isInitialized) {

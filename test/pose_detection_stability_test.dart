@@ -207,5 +207,21 @@ void main() {
       final countdownResult = MlService.instance.analyzePoses([pose], imageSize, isCountingDown: true);
       expect(countdownResult.status, PoseStatus.ready);
     });
+
+    test('Android landscape sensor buffer (1280x720) with 90deg rotation produces ready pose when upright size (720x1280) is used', () {
+      final pose = Pose(landmarks: createFullFrontLandmarks());
+
+      // If unrotated buffer dimensions (1280, 720) were mistakenly passed:
+      const rawLandscapeBuffer = Size(1280, 720);
+      final buggyResult = MlService.instance.analyzePoses([pose], rawLandscapeBuffer);
+      // maxY (~1120) > 720 * 0.98 (705.6) -> permanently notFullBody!
+      expect(buggyResult.status, PoseStatus.notFullBody);
+
+      // When rotation is accounted for (swapping 1280x720 to upright 720x1280):
+      final uprightSize = Size(rawLandscapeBuffer.height, rawLandscapeBuffer.width);
+      final correctedResult = MlService.instance.analyzePoses([pose], uprightSize);
+      expect(correctedResult.status, PoseStatus.ready);
+      expect(correctedResult.bodyCenterX, closeTo(0.5, 0.05));
+    });
   });
 }
