@@ -42,10 +42,12 @@ void main() {
           .setMockMethodCallHandler(const MethodChannel('plugins.flutter.io/path_provider'), null);
     });
 
-    test('init configures audio context with respectSilence false', () async {
+    test('init configures audio context with respectSilence false on iOS', () async {
       debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
       try {
         globalMethodCalls.clear();
+        playerMethodCalls.clear();
+        SoundService.instance.resetForTest();
         await SoundService.instance.init();
 
         // Audio context is configured to play through silent switch
@@ -55,6 +57,26 @@ void main() {
         final args = contextCall.first.arguments as Map<dynamic, dynamic>;
         expect(args['category'], equals('playback'));
         expect(args['options'], contains('duckOthers'));
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    });
+
+    test('init configures audio context on Android for both global and player instance', () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      try {
+        globalMethodCalls.clear();
+        playerMethodCalls.clear();
+        SoundService.instance.resetForTest();
+        await SoundService.instance.init();
+
+        // Audio context is configured globally
+        final globalContextCall = globalMethodCalls.where((c) => c.method == 'setAudioContext').toList();
+        expect(globalContextCall.isNotEmpty, isTrue);
+
+        // Audio context is also applied directly to the player instance
+        final playerContextCall = playerMethodCalls.where((c) => c.method == 'setAudioContext').toList();
+        expect(playerContextCall.isNotEmpty, isTrue);
       } finally {
         debugDefaultTargetPlatformOverride = null;
       }
